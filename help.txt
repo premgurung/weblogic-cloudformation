@@ -1,0 +1,58 @@
+ <Web server: MS_i-a0f99d95, failed to perform batched update for replicated sessions against jndiname: null on the secondary server: t3://ec2-54-244-154-54.us-west-2.compute.amazonaws.com:7003 http-port: 0 https-port: 0
+weblogic.rmi.extensions.RequestTimeoutException: RJVM response from 'weblogic.rjvm.RJVMImpl@16d59063 - id: '-7711416930404786417S:ec2-54-244-154-54.us-west-2.compute.amazonaws.com:[7003,-1,-1,-1,-1,-1,-1]:ec2-54-214-237-212.us-west-2.compute.amazonaws.com:bicevida:MS_i-44ceaa71' connect time: 'Tue May 28 21:14:56 UTC 2013'' for 'updateLastAccessTimes([Lweblogic.cluster.replication.ROID;[JJLjava.lang.String;)' timed out after: 30000ms.
+        at weblogic.rjvm.ResponseImpl.unmarshalReturn(ResponseImpl.java:237)
+        at weblogic.rmi.internal.BasicRemoteRef.invoke(BasicRemoteRef.java:223)
+        at weblogic.servlet.internal.ROIDLookupImpl_1036_WLStub.updateLastAccessTimes(Unknown Source)
+        at weblogic.servlet.internal.HttpServer$Replicator.updateROIDLastAccessTimes(HttpServer.java:531)
+        at weblogic.servlet.internal.session.ReplicatedSessionContext$LATUpdateTrigger.sendBatchJob(ReplicatedSessionContext.java:722)
+        at weblogic.servlet.internal.session.ReplicatedSessionContext$LATUpdateTrigger.runTrigger(ReplicatedSessionContext.java:685)
+        at weblogic.servlet.internal.session.ReplicatedSessionContext$LATUpdateTrigger.access$300(ReplicatedSessionContext.java:557)
+        at weblogic.servlet.internal.session.ReplicatedSessionContext$LATUpdateTrigger$1.run(ReplicatedSessionContext.java:661)
+        at weblogic.security.acl.internal.AuthenticatedSubject.doAs(AuthenticatedSubject.java:321)
+        at weblogic.security.service.SecurityManager.runAs(SecurityManager.java:120)
+        at weblogic.servlet.internal.session.ReplicatedSessionContext$LATUpdateTrigger.timerExpired(ReplicatedSessionContext.java:657)
+        at weblogic.timers.internal.TimerImpl.run(TimerImpl.java:273)
+        at weblogic.work.SelfTuningWorkManagerImpl$WorkAdapterImpl.run(SelfTuningWorkManagerImpl.java:545)
+        at weblogic.work.ExecuteThread.execute(ExecuteThread.java:256)
+        at weblogic.work.ExecuteThread.run(ExecuteThread.java:221)
+
+------------------
+
+<May 29, 2013 5:12:11 PM> <WARNING> <Uncaught exception in server handlerjavax.net.ssl.SSLKeyException: [Security:090482]BAD_CERTIFICATE alert was received from ip-10-253-51-167.us-west-2.compute.internal - 10.253.51.167. Check the peer to determine why it rejected the certificate chain (trusted CA configuration, hostname verification). SSL debug tracing may be required to determine the exact reason the certificate was rejected.>
+javax.net.ssl.SSLKeyException: [Security:090482]BAD_CERTIFICATE alert was received from ip-10-253-51-167.us-west-2.compute.internal - 10.253.51.167. Check the peer to determine why it rejected the certificate chain (trusted CA configuration, hostname verification). SSL debug tracing may be required to determine the exact reason the certificate was rejected.
+        at com.certicom.tls.interfaceimpl.TLSConnectionImpl.fireException(Unknown Source)
+        at com.certicom.tls.interfaceimpl.TLSConnectionImpl.fireAlertReceived(Unknown Source)
+        at com.certicom.tls.record.alert.AlertHandler.handle(Unknown Source)
+        at com.certicom.tls.record.alert.AlertHandler.handleAlertMessages(Unknown Source)
+        at com.certicom.tls.record.MessageInterpreter.interpretContent(Unknown Source)
+        at com.certicom.tls.record.MessageInterpreter.decryptMessage(Unknown Source)
+        at com.certicom.tls.record.ReadHandler.processRecord(Unknown Source)
+        at com.certicom.tls.record.ReadHandler.readRecord(Unknown Source)
+        at com.certicom.tls.record.ReadHandler.readUntilHandshakeComplete(Unknown Source)
+        at com.certicom.tls.interfaceimpl.TLSConnectionImpl.completeHandshake(Unknown Source)
+        at com.certicom.tls.record.ReadHandler.read(Unknown Source)
+        at com.certicom.io.InputSSLIOStreamWrapper.read(Unknown Source)
+        at sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:264)
+        at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:306)
+        at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:158)
+        at java.io.InputStreamReader.read(InputStreamReader.java:167)
+        at java.io.BufferedReader.fill(BufferedReader.java:136)
+        at java.io.BufferedReader.readLine(BufferedReader.java:299)
+        at java.io.BufferedReader.readLine(BufferedReader.java:362)
+        at weblogic.nodemanager.server.Handler.run(Handler.java:71)
+        at java.lang.Thread.run(Thread.java:662)
+--------------------
+
+<May 30, 2013 6:01:32 PM> <WARNING> <Exception while starting server 'MS_i-78dbb94d'>
+java.io.IOException: Server failed to start up. See server output log for more details.
+        at weblogic.nodemanager.server.AbstractServerManager.start(AbstractServerManager.java:196)
+        at weblogic.nodemanager.server.ServerManager.start(ServerManager.java:23)
+        at weblogic.nodemanager.server.Handler.handleStart(Handler.java:609)
+        at weblogic.nodemanager.server.Handler.handleCommand(Handler.java:121)
+        at weblogic.nodemanager.server.Handler.run(Handler.java:71)
+        at java.lang.Thread.run(Thread.java:662)
+-------------------------
+java.lang.RuntimeException: The JMX ObjectName that is being proxied has been unregistered: com.bea:Name=linux.i-1c690429,Type=UnixMachine
+------------
+
+ weblogic.cluster.replication.ApplicationUnavailableException: WebApp with contextPath: /clustered-webapp not found in the secondary server.

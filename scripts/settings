@@ -1,0 +1,4 @@
+admin_ip = ADMIN_IP
+domain_name = R_DOMAIN
+cluster_name = R_CLUSTER
+admin_pwd = R_PWD
