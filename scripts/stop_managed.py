@@ -4,7 +4,7 @@ import os, sys
 
 ###########################################
 
-loadProperties('/tmp/scripts/settings')
+loadProperties('/tmp/weblogic-cloudformation-master/scripts/settings')
 r = urllib2.urlopen('http://169.254.169.254/latest/meta-data/public-hostname')
 public_dns = r.read()
 r = urllib2.urlopen('http://169.254.169.254/latest/meta-data/instance-id')

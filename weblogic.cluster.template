@@ -142,28 +142,10 @@
               "yum" : {
               }
             },
+            "sources" : {
+              "/tmp/": "https://github.com/pcortezc/weblogic-cloudformation/archive/master.zip"
+            },
             "files" : {
-              "/tmp/scripts/start_managed.py" : {
-                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/scripts/start_managed.py"]] },
-                "mode"   : "000644",
-                "owner"  : "root",
-                "group"  : "root",
-                "authentication" : "S3AccessCreds"
-              },
-              "/tmp/scripts/settings" : {
-                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/scripts/settings"]] },
-                "mode"   : "000644",
-                "owner"  : "root",
-                "group"  : "root",
-                "authentication" : "S3AccessCreds"
-              },
-              "/tmp/scripts/stop_managed.py" : {
-                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/scripts/stop_managed.py"]] },
-                "mode"   : "000644",
-                "owner"  : "root",
-                "group"  : "root",
-                "authentication" : "S3AccessCreds"
-              },
               "/tmp/domain-template.jar" : {
                 "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/domain/",{ "Ref" : "DomainName" },"-template.jar"]] },
                 "mode"   : "000644",
@@ -295,14 +277,14 @@
           "sed -i \"/START WEBLOGIC/a\\JAVA_OPTIONS=\\\"\\${JAVA_OPTIONS} -Dweblogic.security.SSL.ignoreHostnameVerification=true\\\"\"  /opt/Oracle/Middleware/user_projects/domains/bicevida/bin/startWebLogic.sh\n",
 
           "#SETTINGS\n",
-          "sed -i \"s/ADMIN_IP/",{ "Ref" : "AdminPublicDNS" },"/g\" /tmp/scripts/settings\n",
-          "sed -i \"s/R_DOMAIN/",{ "Ref" : "DomainName" },"/g\" /tmp/scripts/settings\n",
-          "sed -i \"s/R_CLUSTER/",{ "Ref" : "ClusterName" },"/g\" /tmp/scripts/settings\n",
-          "sed -i \"s/R_PWD/",{ "Ref" : "AdminPassword" },"/g\" /tmp/scripts/settings\n",
+          "sed -i \"s/ADMIN_IP/",{ "Ref" : "AdminPublicDNS" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
+          "sed -i \"s/R_DOMAIN/",{ "Ref" : "DomainName" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
+          "sed -i \"s/R_CLUSTER/",{ "Ref" : "ClusterName" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
+          "sed -i \"s/R_PWD/",{ "Ref" : "AdminPassword" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
 
 
           "#CREATE MACHINE AND SERVER\n",
-          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/scripts/start_managed.py\n",
+          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/weblogic-cloudformation-master/scripts/start_managed.py\n",
           
           "# START WEBLOGIC SERVER\n",
           "nohup sh /opt/Oracle/Middleware/wlserver_10.3/server/bin/startNodeManager.sh > /dev/null 2>&1 &\n",
