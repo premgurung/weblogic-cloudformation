@@ -109,7 +109,7 @@ def create_cluster(name, managed_servers):
     #set('ClusterAddress', address)
     set('WeblogicPluginEnabled', True)
 
-def assign(servers,machine,cluster):
+def assign_all(servers,machine,cluster):
     # assign server to machine
     txt = ''
     cd('/Machines/%s' % machine['name'])
@@ -160,7 +160,7 @@ for info in servers_data:
 # Create and configure a cluster and assign the Managed Servers to that cluster.
 create_cluster(cluster_name, servers_data)
 
-#assign(servers_data,machine_data,cluster_name)
+assign_all(servers_data,machine_data,cluster_name)
 
 # updating the changes
 print('Finalizing the changes')
