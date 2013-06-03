@@ -36,7 +36,6 @@ def start_domain(name, status_type):
         print('Reading the Domain from In Offline Mode')
         readDomain('/opt/Oracle/Middleware/user_projects/domains/%s' % name)
 
-
 def create_password(pwd):
     try: 
         cd('/')
