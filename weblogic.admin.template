@@ -141,22 +141,10 @@
                 "compat-libstdc++*" : []
               }
             },
-
+            "sources" : {
+              "/tmp/": "https://github.com/pcortezc/weblogic-cloudformation/archive/master.zip"
+            },
             "files" : {
-              "/tmp/scripts/start_admin.py" : {
-                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/scripts/start_admin.py"]] },
-                "mode"   : "000644",
-                "owner"  : "root",
-                "group"  : "root",
-                "authentication" : "S3AccessCreds"
-              },
-              "/tmp/scripts/settings" : {
-                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/scripts/settings"]] },
-                "mode"   : "000644",
-                "owner"  : "root",
-                "group"  : "root",
-                "authentication" : "S3AccessCreds"
-              },
               "/etc/httpd/conf.d/weblogic.conf" : {
                 "content" : { "Fn::Join" : ["", [
                   "listen 8080\n",
@@ -319,16 +307,16 @@
           "#SETTINGS\n",
           "PUBLIC_DNS=\"$(curl http://169.254.169.254/latest/meta-data/public-hostname 2>/dev/null)\"\n",
           "sed -i \"s/ADMIN_IP/\"$PUBLIC_DNS\"/g\" /tmp/scripts/settings\n",
-          "sed -i \"s/R_DOMAIN/",{ "Ref" : "DomainName" },"/g\" /tmp/scripts/settings\n",
-          "sed -i \"s/R_CLUSTER/",{ "Ref" : "ClusterName" },"/g\" /tmp/scripts/settings\n",
-          "sed -i \"s/R_PWD/",{ "Ref" : "AdminPassword" },"/g\" /tmp/scripts/settings\n",
+          "sed -i \"s/R_DOMAIN/",{ "Ref" : "DomainName" },"/g\" /tmp/weblogic-cloudformation/scripts/settings\n",
+          "sed -i \"s/R_CLUSTER/",{ "Ref" : "ClusterName" },"/g\" /tmp/weblogic-cloudformation/scripts/settings\n",
+          "sed -i \"s/R_PWD/",{ "Ref" : "AdminPassword" },"/g\" /tmp/weblogic-cloudformation/scripts/settings\n",
 
           "#Create domain\n",
           "sed -i \"s/LOCALHOST_R/\"$PUBLIC_DNS\"/g\" /etc/httpd/conf.d/weblogic.conf\n",
           
 
           "#CREATE DOMAIN\n",
-          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/scripts/start_admin.py\n",
+          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/weblogic-cloudformation/scripts/start_admin.py\n",
 
           "# SSL CONFIG\n",
           "sed -i \"/export PATH/a\\JAVA_OPTIONS=\\\"\\${JAVA_OPTIONS} -Dweblogic.nodemanager.sslHostNameVerificationEnabled=false\\\"\" /opt/Oracle/Middleware/wlserver_10.3/server/bin/startNodeManager.sh\n",
