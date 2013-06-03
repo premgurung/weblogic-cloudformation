@@ -65,7 +65,7 @@ else:
 
 cd('/Servers/%s/SSL/%s' % (servers_data['name'],servers_data['name']))
 cmo.setEnabled(true)
-cmo.setListenPort(7502)
+cmo.setListenPort(servers_data['port_ssl'])
 
 save()
 activate(block="true")
