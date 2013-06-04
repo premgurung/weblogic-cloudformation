@@ -333,7 +333,6 @@
         "ScalingAdjustment" : "1"
       }
     },
-
     "WebServerScaleDownPolicy" : {
       "Type" : "AWS::AutoScaling::ScalingPolicy",
       "Properties" : {
@@ -343,7 +342,6 @@
         "ScalingAdjustment" : "-1"
       }
     },
-
     "CPUAlarmHigh": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {

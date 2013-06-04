@@ -124,7 +124,7 @@
       }
     },
 
-    "Cluster" : {
+    "ClusterGroup" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
         "TemplateURL" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/templates/weblogic.autoscaling.template"]] },
