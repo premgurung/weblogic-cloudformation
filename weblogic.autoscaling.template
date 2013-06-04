@@ -140,7 +140,7 @@
         "LaunchConfigurationName" : { "Ref" : "ClusterServer" },
         "MinSize" : "1",
         "MaxSize" : "5",
-        "DesiredCapacity" : "1",
+        "DesiredCapacity" : "1"
       }
     },
 
@@ -373,7 +373,7 @@
         "Dimensions": [{"Name": "AutoScalingGroupName","Value": { "Ref": "WebServerGroup" }}],
         "ComparisonOperator": "LessThanThreshold"
       }
-    },
+    }
   },
   "Outputs" : {
   }
