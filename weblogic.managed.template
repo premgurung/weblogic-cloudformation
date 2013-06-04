@@ -54,6 +54,12 @@
       "Description" : "Nombre del Bucket donde estan todas las cosas",
       "Type"        : "String"
     },
+
+    "AdminPublicDNS" : {
+      "Description" : "DNS publico de servidor admin",
+      "Type"        : "String"
+    },
+
     "SecurityGroupName" : {
       "Description" : "Nombre del grupo de seguridad",
       "Type"        : "String"
@@ -126,101 +132,31 @@
         "Bucket" : { "Ref" : "BucketName" }
       }
     },
-
-    "IPAddressMachine" : {
-      "Type" : "AWS::EC2::EIP",
-      "Properties" : {
-        "InstanceId" : { "Ref" : "AdminServer" }
-      }
-    },
-  
-    "AdminServer": {
+    
+    "ClusterServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
             "packages" : {
               "yum" : {
-                "httpd"             : [],
-                "compat-libstdc++*" : []
               }
             },
             "sources" : {
               "/tmp/": "https://github.com/pcortezc/weblogic-cloudformation/archive/master.zip"
             },
             "files" : {
-              "/etc/httpd/conf.d/weblogic.conf" : {
-                "content" : { "Fn::Join" : ["", [
-                  "listen 8080\n",
-                  "<VirtualHost *:8080>\n",
-                  "\tDocumentRoot /var/www/html\n",
-                  "\tServerName localhost\n",
-                  
-                  "\t<IfModule mod_weblogic.c>\n",
-                  "\t\tSetHandler weblogic-handler\n",
-                  "\t\tWeblogicHost LOCALHOST_R\n",
-                  "\t\tWebLogicPort 7001\n",
-                  "\t\tMatchExpression *.jsp\n",
-                  "\t</IfModule>\n",
-                  "</VirtualHost>\n",
-
-                  "<VirtualHost *:80>\n",
-                  "\tDocumentRoot /var/www/html\n",
-                  "\tServerName localhost\n",
-                  
-                  "\t<IfModule mod_weblogic.c>\n",
-                  "\t\tSetHandler weblogic-handler\n",
-                  "\t\tWeblogicHost LOCALHOST_R\n",
-                  "\t\tWebLogicPort 7003\n",
-                  "\t\tMatchExpression *.jsp\n",
-                  "\t</IfModule>\n",
-                  "</VirtualHost>\n"
-                ]]},
+              "/tmp/domain-template.jar" : {
+                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/domain/",{ "Ref" : "DomainName" },"-template.jar"]] },
                 "mode"   : "000644",
                 "owner"  : "root",
-                "group"  : "root"
-              },
-              "/etc/init.d/weblogic": {
-                "content" : { "Fn::Join" : ["", [
-                  "#!/bin/bash\n",
-                  "# chkconfig: 2345 20 80\n",
-                  "# description: Weblogic stop start autorun\n",
-                  "# Source function library\n",
-                  ". /etc/init.d/functions\n",
-                  "start() {\n",
-                  "\techo $\"Starting Weblogic\"\n",
-                  "\ttouch /var/lock/subsys/weblogic\n",
-                  "\t/bin/su root -c \"sh /opt/Oracle/Middleware/user_projects/domains/",{ "Ref" : "DomainName" },"/startWebLogic.sh > /dev/null 2>&1 &\"\n",
-                  "}\n",
-                  "stop() {\n",
-                  "\techo $\"Stopping Weblogic\"\n",
-                  "\t/bin/su root -c \"sh /opt/Oracle/Middleware/user_projects/domains/",{ "Ref" : "DomainName" },"/bin/stopWebLogic.sh > /dev/nul 2>&1 &\"\n",
-                  "\trm -f /var/lock/subsys/weblogic\n",
-                  "}\n",
-                  "case \"$1\" in\n",
-                  " start)\n",
-                  "\tstart\n",
-                  "\t;;\n",
-                  " stop)\n",
-                  "\tstop\n",
-                  "\t;;\n",
-                  " restart)\n",
-                  "\tstop\n",
-                  "\tstart\n",
-                  "\t;;\n",
-                  " *)\n",
-                  "\techo \"Usage: $0 {start|stop|restart}\"\n",
-                  "esac\n",
-                  "exit 0\n"
-                ]]},
-                "mode"   : "000755",
-                "owner"  : "root",
-                "group"  : "root"
+                "group"  : "root",
+                "authentication" : "S3AccessCreds"
               },
               "/etc/init.d/nodemanager": {
                 "content" : { "Fn::Join" : ["", [
                   "#!/bin/bash\n",
-                  "# chkconfig: 2345 99 80\n",
+                  "# chkconfig: 2345 99 01\n",
                   "# description: NodeManager stop start autorun\n",
                   "# Source function library\n",
                   ". /etc/init.d/functions\n",
@@ -233,6 +169,42 @@
                   "\tstart\n",
                   "\t;;\n",
                   " stop)\n",
+                  "\t;;\n",
+                  " restart)\n",
+                  "\tstart\n",
+                  "\t;;\n",
+                  " *)\n",
+                  "\techo \"Usage: $0 {start|stop|restart}\"\n",
+                  "esac\n",
+                  "exit 0\n"
+                ]]},
+                "mode"   : "000755",
+                "owner"  : "root",
+                "group"  : "root"
+              },
+              "/etc/init.d/weblogic": {
+                "content" : { "Fn::Join" : ["", [
+                  "#!/bin/bash\n",
+                  "# chkconfig: 2345 20 80\n",
+                  "# description: Weblogic admin server sync\n",
+                  "# Source function library\n",
+                  ". /etc/init.d/functions\n",
+                  "start() {\n",
+                  "\techo $\"Uploading correct data to admin  Weblogic\"\n",
+                  "\ttouch /var/lock/subsys/weblogic\n",
+                  "\t/bin/su root -c \"sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/weblogic-cloudformation-master/scripts/start_managed.py\"\n",
+                  "}\n",
+                  "stop() {\n",
+                  "\techo $\"Deleting server from admin  Weblogic\"\n",
+                  "\t/bin/su root -c \"sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/weblogic-cloudformation-master/scripts/stop_managed.py\"\n",
+                  "\trm -f /var/lock/subsys/weblogic\n",
+                  "}\n",
+                  "case \"$1\" in\n",
+                  " start)\n",
+                  "\tstart\n",
+                  "\t;;\n",
+                  " stop)\n",
+                  "\tstop\n",
                   "\t;;\n",
                   " restart)\n",
                   "\tstart\n",
@@ -264,12 +236,6 @@
                 "owner"  : "root",
                 "group"  : "root"
               }
-            },
-
-            "services" : {
-              "sysvinit" : {
-                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
-              }
             }
           }
         },
@@ -284,8 +250,8 @@
       },
       "Properties": {
         "ImageId": "ami-59e27469",
-        "InstanceType"   : { "Ref" : "InstanceType" },
         "AvailabilityZone" : "us-west-2a",
+        "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ { "Ref": "SecurityGroupName"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
@@ -300,40 +266,28 @@
           "}\n",
 
           "# Install Apache Web Server\n",
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r AdminServer ",
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ClusterServer ",
           "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
 
-
-          "cp /opt/Oracle/Middleware/wlserver_10.3/server/plugin/linux/x86_64/mod_wl_22.so /etc/httpd/modules/mod_wl_22.so\n",
-          "chmod 755 /etc/httpd/modules/mod_wl_22.so\n",
-          "sed -i \"/mod_version.so/a\\LoadModule weblogic_module modules/mod_wl_22.so\" /etc/httpd/conf/httpd.conf\n",
-
-          "#SETTINGS\n",
-          "PUBLIC_DNS=\"$(curl http://169.254.169.254/latest/meta-data/public-hostname 2>/dev/null)\"\n",
-          "sed -i \"s/ADMIN_IP/\"$PUBLIC_DNS\"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
-          "sed -i \"s/R_DOMAIN/",{ "Ref" : "DomainName" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
-          "sed -i \"s/R_CLUSTER/",{ "Ref" : "ClusterName" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
-          "sed -i \"s/R_PWD/",{ "Ref" : "AdminPassword" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
-
-          "#Create domain\n",
-          "sed -i \"s/LOCALHOST_R/\"$PUBLIC_DNS\"/g\" /etc/httpd/conf.d/weblogic.conf\n",
-          
-
-          "#CREATE DOMAIN\n",
-          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/weblogic-cloudformation-master/scripts/start_admin.py\n",
+          "# INSTALL DOMAIN\n",
+          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/unpack.sh -domain=/opt/Oracle/Middleware/user_projects/domains/",{ "Ref" : "DomainName" }," -template=/tmp/domain-template.jar\n",
 
           "# SSL CONFIG\n",
           "sed -i \"/export PATH/a\\JAVA_OPTIONS=\\\"\\${JAVA_OPTIONS} -Dweblogic.nodemanager.sslHostNameVerificationEnabled=false\\\"\" /opt/Oracle/Middleware/wlserver_10.3/server/bin/startNodeManager.sh\n",
           "sed -i \"/START WEBLOGIC/a\\JAVA_OPTIONS=\\\"\\${JAVA_OPTIONS} -Dweblogic.security.SSL.ignoreHostnameVerification=true\\\"\"  /opt/Oracle/Middleware/user_projects/domains/bicevida/bin/startWebLogic.sh\n",
 
-          "# INSTALL S3 CURL\n",
-          "sh /tmp/install_s3curl.sh\n",
+          "#SETTINGS\n",
+          "sed -i \"s/ADMIN_IP/",{ "Ref" : "AdminPublicDNS" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
+          "sed -i \"s/R_DOMAIN/",{ "Ref" : "DomainName" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
+          "sed -i \"s/R_CLUSTER/",{ "Ref" : "ClusterName" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
+          "sed -i \"s/R_PWD/",{ "Ref" : "AdminPassword" },"/g\" /tmp/weblogic-cloudformation-master/scripts/settings\n",
 
-          "# CONFIG PACK\n",
-          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/pack.sh -managed=true -domain=/opt/Oracle/Middleware/user_projects/domains/",{ "Ref" : "DomainName" }," -template=/opt/Oracle/Middleware/user_projects/domains/", { "Ref" : "DomainName" } ,"-template.jar -template_name=",{ "Ref" : "DomainName" },"\n",
 
-          "# UPLOAD CONFIG \n",
-          "/usr/local/bin/s3curl.pl --id ",{ "Ref" : "CfnKeys" }," --key ",{"Fn::GetAtt": ["CfnKeys", "SecretAccessKey"]}," --put /opt/Oracle/Middleware/user_projects/domains/", { "Ref" : "DomainName" } ,"-template.jar -- https://s3-", {"Ref" :"AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/domain/", { "Ref" : "DomainName" } ,"-template.jar -s\n",
+          "#CREATE MACHINE AND SERVER\n",
+          "sh /opt/Oracle/Middleware/wlserver_10.3/common/bin/wlst.sh /tmp/weblogic-cloudformation-master/scripts/start_managed.py\n",
+          
+          "# START WEBLOGIC SERVER\n",
+          "nohup sh /opt/Oracle/Middleware/wlserver_10.3/server/bin/startNodeManager.sh > /dev/null 2>&1 &\n",
 
           "# AUTO START\n",
           "chkconfig --add weblogic\n",
@@ -341,44 +295,28 @@
           "chkconfig weblogic on\n",
           "chkconfig nodemanager on\n",
 
-          "# START WEBLOGIC SERVER\n",
-          "nohup sh /opt/Oracle/Middleware/user_projects/domains/",{ "Ref" : "DomainName" },"/bin/startWebLogic.sh > /dev/null 2>&1 &\n",
-          "nohup sh /opt/Oracle/Middleware/wlserver_10.3/server/bin/startNodeManager.sh > /dev/null 2>&1 &\n",
-
-          "# Restart apache (httpd)\n",
-          "service httpd restart\n",
-
-          "# START MANAGED MACHINE\n",
-          "#nohup /opt/Oracle/Middleware/user_projects/domains/",{ "Ref" : "DomainName" },"/bin/startManagedWebLogic.sh ManagedServer_$PUBLIC_DNS > /dev/null 2>&1 &\n",
-
           "# All is well so signal success\n",
           "/opt/aws/bin/cfn-signal -e 0 -r \"Weblogic setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
         ]]}}
       }
     },
-
     "WaitHandle" : {
       "Type" : "AWS::CloudFormation::WaitConditionHandle"
     },
 
     "WaitCondition" : {
       "Type" : "AWS::CloudFormation::WaitCondition",
-      "DependsOn" : "AdminServer",
+      "DependsOn" : "ClusterServer",
       "Properties" : {
         "Handle" : {"Ref" : "WaitHandle"},
         "Timeout" : "3600"
       }
     }
   },
-
   "Outputs" : {
     "PublicDNS" : {
-      "Value" : { "Fn::Join" : ["", [ { "Fn::GetAtt" : [ "AdminServer", "PublicDnsName" ]}]] },
-      "Description" : "Public DNS"
-    },
-    "WeblogicConsole" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AdminServer", "PublicDnsName" ]}, ":8080/console" ]] },
-      "Description" : "Weblogic console URL"
+      "Value" : { "Fn::Join" : ["", [ { "Fn::GetAtt" : [ "ClusterServer", "PublicDnsName" ]}]] },
+      "Description" : "App server URLS"
     }
   }
 }

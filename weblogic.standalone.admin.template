@@ -53,10 +53,6 @@
       "Default": "cl.bicevida.weblogic",
       "Description" : "Nombre del Bucket donde estan todas las cosas",
       "Type"        : "String"
-    },
-    "SecurityGroupName" : {
-      "Description" : "Nombre del grupo de seguridad",
-      "Type"        : "String"
     }
   },
 
@@ -286,7 +282,7 @@
         "ImageId": "ami-59e27469",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "AvailabilityZone" : "us-west-2a",
-        "SecurityGroups" : [ { "Ref": "SecurityGroupName"} ],
+        "SecurityGroups" : [ { "Ref": "WebServerSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
@@ -368,6 +364,26 @@
         "Handle" : {"Ref" : "WaitHandle"},
         "Timeout" : "3600"
       }
+    },
+
+  
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "7001", "ToPort" : "7001", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "7002", "ToPort" : "7002", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "7003", "ToPort" : "7003", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "7502", "ToPort" : "7502", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "7503", "ToPort" : "7503", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "5556", "ToPort" : "5556", "CidrIp" : "0.0.0.0/0"}
+        ]
+      }
     }
   },
 
@@ -379,6 +395,10 @@
     "WeblogicConsole" : {
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AdminServer", "PublicDnsName" ]}, ":8080/console" ]] },
       "Description" : "Weblogic console URL"
+    },
+    "SecurityGroup" : {
+      "Value" : { "Fn::Join" : ["", [{ "Ref": "WebServerSecurityGroup"}]] },
+      "Description" : "Security Group Name"
     }
   }
 }
