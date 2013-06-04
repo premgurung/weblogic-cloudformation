@@ -122,7 +122,25 @@
           "ManagedPublicDNS": { "Fn::GetAtt" : [ "ManagedServer", "Outputs.PublicDNS" ]}
         }
       }
+    },
+
+    "Cluster" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/templates/weblogic.autoscaling.template"]] },
+        "Parameters" : {
+          "KeyName" : { "Ref" : "KeyName" },
+          "InstanceType" : { "Ref" : "InstanceType" },
+          "AdminPassword": { "Ref" : "AdminPassword" },
+          "ClusterName" : { "Ref" : "ClusterName" },
+          "DomainName": { "Ref" : "DomainName" },
+          "BucketName": { "Ref" : "BucketName"},
+          "SecurityGroupName":{ "Ref": "WebServerSecurityGroup"},
+          "AdminPublicDNS": { "Fn::GetAtt" : [ "AdminServer", "Outputs.PublicDNS" ]}
+        }
+      }
     }
+
   },
   "Outputs" : {
     "ConsoleURL" : {
