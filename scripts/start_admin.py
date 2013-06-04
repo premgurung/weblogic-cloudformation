@@ -68,7 +68,10 @@ def create_machine(parameter):
 def create_server(parameter, machine):
     try: 
         cd('/Servers/%s' % parameter['name'])
-        print '===> SERVER %s ALREADY EXISTS' % parameter['name']
+        if parameter['is_admin']:
+            print '===> INITIALAZING %s SERVER' % parameter['name']
+        else:
+            print '===> SERVER %s ALREADY EXISTS' % parameter['name']
     except:
         print 'CREATING SERVER: %s' % parameter['name']
         if not parameter['is_admin']:
@@ -92,8 +95,6 @@ def create_server(parameter, machine):
 
     if parameter['is_admin'] and is_new_domain:
         create_password(admin_pwd)
-    #else:
-    #    assign('Server', parameter['name'],'Machine', machine['name'])
 
 def create_cluster(name, managed_servers):
     try: 

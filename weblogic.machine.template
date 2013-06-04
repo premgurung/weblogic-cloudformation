@@ -133,13 +133,6 @@
       }
     },
     
-    "IPAddressMachine" : {
-      "Type" : "AWS::EC2::EIP",
-      "Properties" : {
-        "InstanceId" : { "Ref" : "ClusterServer" }
-      }
-    },
-    
     "ClusterServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {

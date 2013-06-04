@@ -24,9 +24,6 @@ if ref != None:
 else:
     cd('/')
     create(machine_data['name'], machine_data['machine_type'])
-    #cmo.createUnixMachine(machine_data['name'])
-    #machine = cmo.createUnixMachine(machine_data['name'])
-    #machine.getNodeManager().setNMType('ssl')
 
 ref = getMBean('/Machines/%s/NodeManager' % machine_data['name'])
 if ref != None:

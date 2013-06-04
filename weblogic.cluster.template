@@ -300,10 +300,100 @@
         ]]}}
       }
     },
+
+    "ElbServer": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "httpd"             : [],
+                "compat-libstdc++*" : []
+              }
+            },
+            "sources" : {
+              "/tmp/": "https://github.com/pcortezc/weblogic-cloudformation/archive/master.zip"
+            },
+            "files" : {
+              "/etc/httpd/modules/mod_wl_22.so" : {
+                "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/modules/mod_wl_22.so"]] },
+                "mode"   : "000755",
+                "owner"  : "root",
+                "group"  : "root",
+                "authentication" : "S3AccessCreds"
+              },
+              "/etc/httpd/conf.d/weblogic.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "<VirtualHost *:80>\n",
+                  "\tDocumentRoot /var/www/html\n",
+                  "\tServerName localhost\n",
+                  
+                  "\t<IfModule mod_weblogic.c>\n",
+                  "\t\tSetHandler weblogic-handler\n",
+                  "\t\tWebLogicCluster ",{ "Ref" : "AdminPublicDNS" },":7003\n",
+                  "\t\tMatchExpression *.jsp\n",
+                  "\t\tDebug ON\n",
+                  "\t\tDebugConfigInfo ON\n",
+                  "\t\tWLLogFile /tmp/weblogic.log\n",
+                  "\t</IfModule>\n",
+                  "</VirtualHost>\n"
+                ]]},
+                "mode"   : "000644",
+                "owner"  : "root",
+                "group"  : "root"
+              }
+            },
+            "services" : {
+              "sysvinit" : {
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Authentication" : {
+          "S3AccessCreds" : {
+            "type" : "S3",
+            "accessKeyId" : { "Ref" : "CfnKeys" },
+            "secretKey" : {"Fn::GetAtt": ["CfnKeys", "SecretAccessKey"]},
+            "buckets" : [ { "Ref" : "BucketName" } ]
+          }
+        }
+      },
+      "Properties": {
+        "ImageId": { "Fn::FindInMap":["AWSRegionArch2AMI", { "Ref" : "AWS::Region" },{ "Fn::FindInMap" : [ "AWSInstanceType2Arch", "t1.micro", "Arch" ]}]},
+        "AvailabilityZone" : "us-west-2a",
+        "InstanceType"   : "t1.micro",
+        "SecurityGroups" : [ { "Ref": "SecurityGroupName"} ],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "yum update -y aws-cfn-bootstrap\n",
+
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandleELB" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "# Install Apache Web Server\n",
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ElbServer ",
+          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+          "sed -i \"/mod_version.so/a\\LoadModule weblogic_module modules/mod_wl_22.so\" /etc/httpd/conf/httpd.conf\n",
+          "chkconfig httpd on\n",
+
+          "# All is well so signal success\n",
+          "/opt/aws/bin/cfn-signal -e 0 -r \"Weblogic setup complete\" '", { "Ref" : "WaitHandleELB" }, "'\n"
+        ]]}}
+      }
+    },
+
+
     "WaitHandle" : {
       "Type" : "AWS::CloudFormation::WaitConditionHandle"
     },
-
     "WaitCondition" : {
       "Type" : "AWS::CloudFormation::WaitCondition",
       "DependsOn" : "ClusterServer",
@@ -311,16 +401,24 @@
         "Handle" : {"Ref" : "WaitHandle"},
         "Timeout" : "3600"
       }
+    },
+
+    "WaitHandleELB" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "WaitConditionELB" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "ElbServer",
+      "Properties" : {
+        "Handle" : {"Ref" : "WaitHandleELB"},
+        "Timeout" : "3600"
+      }
     }
   },
   "Outputs" : {
     "WebsiteURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ClusterServer", "PublicDnsName" ]}]] },
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ElbServer", "PublicDnsName" ]}]] },
       "Description" : "App server URLS"
-    },
-    "WeblogicConsole" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ClusterServer", "PublicDnsName" ]}, ":8080/console" ]] },
-      "Description" : "Weblogic console URL"
     }
   }
 }
