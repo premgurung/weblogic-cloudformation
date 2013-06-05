@@ -63,6 +63,15 @@
     "SecurityGroupName" : {
       "Description" : "Nombre del grupo de seguridad",
       "Type"        : "String"
+    },
+
+    "WebServerCapacity": {
+      "Default" : "1",
+      "Description" : "El numero inicial de instancias creadas",
+      "Type" : "Number",
+      "MinValue" : 1,
+      "MaxValue" : 5,
+      "ConstraintDescription" : "Tiene que ser un numero entre 1 y 5"
     }
   },
 
@@ -132,20 +141,20 @@
         "Bucket" : { "Ref" : "BucketName" }
       }
     },
-    
+
     "WebServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "AvailabilityZones" : ["us-west-2a"],
         "LaunchConfigurationName" : { "Ref" : "ClusterServer" },
-        "MinSize" : "1",
+        "MinSize" : { "Ref" : "WebServerCapacity" },
         "MaxSize" : "5",
-        "DesiredCapacity" : "1"
+        "DesiredCapacity" : { "Ref" : "WebServerCapacity" }
       }
     },
 
     "ClusterServer": {
-      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
@@ -261,7 +270,6 @@
       },
       "Properties": {
         "ImageId": "ami-59e27469",
-        "AvailabilityZone" : "us-west-2a",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ { "Ref": "SecurityGroupName"} ],
         "KeyName"        : { "Ref" : "KeyName" },
@@ -311,10 +319,10 @@
         ]]}}
       }
     },
-
     "WaitHandle" : {
       "Type" : "AWS::CloudFormation::WaitConditionHandle"
     },
+
     "WaitCondition" : {
       "Type" : "AWS::CloudFormation::WaitCondition",
       "DependsOn" : "ClusterServer",

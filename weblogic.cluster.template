@@ -109,6 +109,24 @@
       }
     },
 
+    "ClusterGroup" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/templates/weblogic.autoscaling.template"]] },
+        "Parameters" : {
+          "KeyName" : { "Ref" : "KeyName" },
+          "InstanceType" : { "Ref" : "InstanceType" },
+          "AdminPassword": { "Ref" : "AdminPassword" },
+          "ClusterName" : { "Ref" : "ClusterName" },
+          "DomainName": { "Ref" : "DomainName" },
+          "BucketName": { "Ref" : "BucketName"},
+          "SecurityGroupName":{ "Ref": "WebServerSecurityGroup"},
+          "WebServerCapacity" : "1",
+          "AdminPublicDNS": { "Fn::GetAtt" : [ "AdminServer", "Outputs.PublicDNS" ]}
+        }
+      }
+    },
+
     "ELBServer" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
@@ -124,27 +142,52 @@
       }
     },
 
-    "ClusterGroup" : {
+    "ELBServerB" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
-        "TemplateURL" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/templates/weblogic.autoscaling.template"]] },
+        "TemplateURL" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/templates/weblogic.lb.template"]] },
         "Parameters" : {
           "KeyName" : { "Ref" : "KeyName" },
-          "InstanceType" : { "Ref" : "InstanceType" },
-          "AdminPassword": { "Ref" : "AdminPassword" },
-          "ClusterName" : { "Ref" : "ClusterName" },
-          "DomainName": { "Ref" : "DomainName" },
+          "InstanceType" : "t1.micro",
           "BucketName": { "Ref" : "BucketName"},
           "SecurityGroupName":{ "Ref": "WebServerSecurityGroup"},
-          "AdminPublicDNS": { "Fn::GetAtt" : [ "AdminServer", "Outputs.PublicDNS" ]}
+          "AdminPublicDNS": { "Fn::GetAtt" : [ "AdminServer", "Outputs.PublicDNS" ]},
+          "ManagedPublicDNS": { "Fn::GetAtt" : [ "ManagedServer", "Outputs.PublicDNS" ]}
+        }
+      }
+    },
+
+    "ElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Metadata" : {
+        "Comment" : "Configure the Load Balancer with a simple health check and cookie-based stickiness"
+      },
+      "Properties" : {
+        "AvailabilityZones" : ["us-west-2a"],
+        "Instances" : [{ "Fn::GetAtt" : [ "ELBServer", "Outputs.InstanceId" ]}, { "Fn::GetAtt" : [ "ELBServerB", "Outputs.InstanceId" ]}],
+        "LBCookieStickinessPolicy" : [ {
+          "PolicyName" : "CookieBasedPolicy",
+          "CookieExpirationPeriod" : "30"
+        } ],
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP",
+          "PolicyNames" : [ "CookieBasedPolicy" ]
+        } ],
+        "HealthCheck" : {
+          "Target" : "HTTP:80/",
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "5",
+          "Interval" : "10",
+          "Timeout" : "5"
         }
       }
     }
-
   },
   "Outputs" : {
     "ConsoleURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ELBServer", "Outputs.PublicDNS" ]},":7001/console"]] },
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]},":7001/console"]] },
       "Description" : "Console Admin URLS"
     }
   }

@@ -228,6 +228,10 @@
     "PublicDNS" : {
       "Value" : { "Fn::Join" : ["", [{ "Fn::GetAtt" : [ "ElbServer", "PublicDnsName" ]}]] },
       "Description" : "App server URLS"
+    },
+    "InstanceId" : {
+      "Value" : { "Fn::Join" : ["", [{ "Ref" : "ElbServer" }]] },
+      "Description" : "App server URLS"
     }
   }
 }
