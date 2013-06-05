@@ -170,11 +170,17 @@
           "CookieExpirationPeriod" : "30"
         } ],
         "Listeners" : [ {
-          "LoadBalancerPort" : "80",
-          "InstancePort" : "80",
-          "Protocol" : "HTTP",
-          "PolicyNames" : [ "CookieBasedPolicy" ]
-        } ],
+            "LoadBalancerPort" : "80",
+            "InstancePort" : "80",
+            "Protocol" : "HTTP",
+            "PolicyNames" : [ "CookieBasedPolicy" ]
+          },
+            "LoadBalancerPort" : "8080",
+            "InstancePort" : "8080",
+            "Protocol" : "HTTP",
+            "PolicyNames" : [ "CookieBasedPolicy" ]
+          },
+        ],
         "HealthCheck" : {
           "Target" : "HTTP:80/",
           "HealthyThreshold" : "2",
@@ -187,7 +193,7 @@
   },
   "Outputs" : {
     "ConsoleURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]},":7001/console"]] },
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]},":8080/console"]] },
       "Description" : "Console Admin URLS"
     }
   }
