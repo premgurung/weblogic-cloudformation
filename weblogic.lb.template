@@ -124,6 +124,12 @@
               "/tmp/": "https://github.com/pcortezc/weblogic-cloudformation/archive/master.zip"
             },
             "files" : {
+              "/var/www/html/mu-b021bd57-1771e475-7eb9f481-82e7d7f2.txt" : {
+                "content" : { "Fn::Join" : ["", ["42"]]},
+                "mode"   : "000755",
+                "owner"  : "root",
+                "group"  : "root"
+              },
               "/etc/httpd/modules/mod_wl_22.so" : {
                 "source" : { "Fn::Join" : ["", ["https://s3-", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "BucketName" },"/modules/mod_wl_22.so"]] },
                 "mode"   : "000755",
@@ -146,6 +152,7 @@
                   "</VirtualHost>\n",
 
                   "<VirtualHost *:80>\n",
+                  "\talias /mu-b021bd57-1771e475-7eb9f481-82e7d7f2.txt /var/www/html/mu-b021bd57-1771e475-7eb9f481-82e7d7f2.txt\n",
                   "\tDocumentRoot /var/www/html\n",
                   "\tServerName localhost\n",
                   "\t<IfModule mod_weblogic.c>\n",
@@ -156,6 +163,9 @@
                   "\t\tDebugConfigInfo ON\n",
                   "\t\tWLLogFile /tmp/weblogic.log\n",
                   "\t</IfModule>\n",
+                  "\t<LocationMatch \"\\.(ico|txt)$\">\n",
+                  "\t\tSetHandler None\n",
+                  "\t</LocationMatch>\n",
                   "</VirtualHost>\n"
                 ]]},
                 "mode"   : "000644",

@@ -175,11 +175,12 @@
             "Protocol" : "HTTP",
             "PolicyNames" : [ "CookieBasedPolicy" ]
           },
+          {
             "LoadBalancerPort" : "8080",
             "InstancePort" : "8080",
             "Protocol" : "HTTP",
             "PolicyNames" : [ "CookieBasedPolicy" ]
-          },
+          }
         ],
         "HealthCheck" : {
           "Target" : "HTTP:80/",

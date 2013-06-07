@@ -56,3 +56,35 @@ java.lang.RuntimeException: The JMX ObjectName that is being proxied has been un
 ------------
 
  weblogic.cluster.replication.ApplicationUnavailableException: WebApp with contextPath: /clustered-webapp not found in the secondary server.
+-----------------------
+
+
+listen 8080
+<VirtualHost *:8080>
+        DocumentRoot /var/www/html
+        ServerName localhost
+        <IfModule mod_weblogic.c>
+                SetHandler weblogic-handler
+                WeblogicHost ec2-54-244-116-84.us-west-2.compute.amazonaws.com
+                WebLogicPort 7001
+                MatchExpression *.jsp
+        </IfModule>
+</VirtualHost>
+
+<VirtualHost *:80>
+        alias /mu-b021bd57-1771e475-7eb9f481-82e7d7f2.txt /var/www/html/mu-b021bd57-1771e475-7eb9f481-82e7d7f2.txt
+        DocumentRoot /var/www/html
+        ServerName localhost
+        <IfModule mod_weblogic.c>
+                SetHandler weblogic-handler
+                WeblogicHost ec2-54-244-116-84.us-west-2.compute.amazonaws.com
+                WebLogicPort 7003
+                MatchExpression *.jsp
+        </IfModule>
+        <LocationMatch "\.(ico|txt)$">
+                SetHandler None
+        </LocationMatch>
+</VirtualHost>
+
+-------------------------
+ab -n 1000 -c 100 http://ws-1708335623.us-west-2.elb.amazonaws.com/clustered-webapp/
